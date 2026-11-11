@@ -11,7 +11,7 @@ les applications, sous Wayland comme sous X11.
 
 ![Préférences](docs/preferences.png)
 
-État : 0.2, construit et testé sur GNOME 51 / Ubuntu 26.10. Toute la chaîne
+État : 0.2, pour GNOME 51 (construit et testé sur Ubuntu 26.10). Toute la chaîne
 est couverte par des tests automatiques sur de vrais périphériques noyau ; sur
 du vrai matériel, elle n'a servi pour l'instant que sur le pavé tactile d'un
 portable (voir [Ce qui est testé](#ce-qui-est-testé)). Les retours d'autres

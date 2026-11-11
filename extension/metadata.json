@@ -1,14 +1,8 @@
 {
   "uuid": "scroll-speed@griffit.gmail.com",
   "name": "Scroll Speed",
-  "description": "Set the scroll speed, the setting GNOME does not have: mouse wheel, two-finger scrolling on the touchpad and middle-button scrolling on a pointing stick, each slower or faster. The wheel also gets a separate horizontal speed and optional acceleration when it spins fast. Works in every application, Wayland and X11 alike.\n\nA compositor hands scroll events to applications before an extension can touch them, so the speed is changed where the events come from: a small Python helper (standard library only, bundled) reads the device and replays it through a virtual one with the scrolling rescaled. This needs one authorization, asked from the preferences, which installs a udev rule giving your session access to mice, touchpads and /dev/uinput (never to keyboards).",
+  "description": "Scrolling too fast, or too slow? GNOME lets you set the pointer speed, but not the scroll speed. Scroll Speed adds the missing setting.\n\n• Mouse wheel: from 0.1× to 5×, with a separate horizontal speed and optional acceleration when the wheel spins fast.\n• Touchpad: two-finger scrolling slower or faster. Pinch, taps, swipes and click-and-drag stay exactly as they are.\n• Pointing stick (TrackPoint): middle-button scrolling slower or faster.\n\nIt works in every application, on Wayland and X11, and changes apply while you move the slider. A device left at 1× is not touched at all.\n\nHow it works: GNOME hands scroll events to applications before an extension can change them, so a small bundled Python helper (standard library only) reads the device and replays it through a virtual one, with only the scrolling rescaled. This needs one authorization, asked from the preferences with your password: a udev rule that gives your session access to mice, touchpads and /dev/uinput, never to keyboards. The same window removes it.\n\nRequires Python 3. Touchpad edge scrolling is not affected. This is an early release: reports are welcome on GitHub.",
   "shell-version": [
-    "45",
-    "46",
-    "47",
-    "48",
-    "49",
-    "50",
     "51"
   ],
   "settings-schema": "org.gnome.shell.extensions.scroll-speed",

@@ -11,7 +11,7 @@ and X11.
 
 ![Preferences](docs/preferences.png)
 
-Status: 0.2, built and tested on GNOME 51 / Ubuntu 26.10. The whole chain is
+Status: 0.2, for GNOME 51 (built and tested on Ubuntu 26.10). The whole chain is
 covered by automated tests on real kernel devices; on physical hardware it has
 only been used on one laptop touchpad so far (see
 [What is tested](#what-is-tested)). Reports from other machines are welcome.
