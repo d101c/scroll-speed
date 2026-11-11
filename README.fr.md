@@ -12,16 +12,23 @@ les applications, sous Wayland comme sous X11.
 ![Préférences](docs/preferences.png)
 
 État : 0.2, construit et testé sur GNOME 51 / Ubuntu 26.10. Toute la chaîne
-est couverte par des tests automatiques sur de vrais périphériques noyau, mais
-elle a encore très peu servi sur du vrai matériel (voir
-[Ce qui est testé](#ce-qui-est-testé)).
+est couverte par des tests automatiques sur de vrais périphériques noyau ; sur
+du vrai matériel, elle n'a servi pour l'instant que sur le pavé tactile d'un
+portable (voir [Ce qui est testé](#ce-qui-est-testé)). Les retours d'autres
+machines sont bienvenus.
 
 ## Installation
 
+Téléchargez `scroll-speed@griffit.gmail.com.shell-extension.zip` depuis la
+[dernière version](https://github.com/d101c/scroll-speed/releases/latest),
+puis :
+
 ```bash
-./pack.sh
 gnome-extensions install --force scroll-speed@griffit.gmail.com.shell-extension.zip
 ```
+
+(Depuis un clone, `./pack.sh` construit ce zip.) Il faut Python 3, présent sur
+toutes les distributions GNOME.
 
 Fermez la session puis rouvrez-la (Wayland ne peut pas charger une nouvelle
 extension dans un Shell en cours d'exécution), activez *Scroll Speed*, ouvrez
@@ -142,7 +149,7 @@ Lua, l'assistant pourra être remplacé sans toucher aux préférences.
 
 `tests/run.sh` lance tout :
 
-- 60 tests unitaires de la mise à l'échelle : la molette (restes, changements
+- 61 tests unitaires de la mise à l'échelle : la molette (restes, changements
   de sens, accélération, souris basse résolution), le pavé tactile
   (défilement, pincement, pouce posé, cliquer-glisser, trois doigts, doigt
   levé en plein défilement, limites que libinput impose aux mouvements
@@ -165,10 +172,10 @@ Vérifié à la main sur GNOME 51 :
 - la règle udev dans `udevadm test` : souris, pavé tactile, TrackPoint et
   uinput reçoivent l'accès, pas le clavier, un clone retrouve son
   `MOUSE_DPI` ;
-- la fenêtre polkit, sur un ThinkPad.
+- la fenêtre polkit et le défilement à deux doigts sur un vrai pavé tactile
+  (ThinkPad, Synaptics I2C), depuis la fenêtre de préférences.
 
-Pas encore testé : une souris, un pavé tactile ou un TrackPoint physique de
-bout en bout.
+Pas encore testé sur du vrai matériel : une souris à molette et un TrackPoint.
 
 `tests/prefs_preview.js` ouvre la fenêtre de préférences hors du Shell et peut
 l'enregistrer en PNG.

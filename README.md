@@ -12,15 +12,21 @@ and X11.
 ![Preferences](docs/preferences.png)
 
 Status: 0.2, built and tested on GNOME 51 / Ubuntu 26.10. The whole chain is
-covered by automated tests on real kernel devices, but it has had very little
-use on physical hardware yet (see [What is tested](#what-is-tested)).
+covered by automated tests on real kernel devices; on physical hardware it has
+only been used on one laptop touchpad so far (see
+[What is tested](#what-is-tested)). Reports from other machines are welcome.
 
 ## Install
 
+Download `scroll-speed@griffit.gmail.com.shell-extension.zip` from the
+[latest release](https://github.com/d101c/scroll-speed/releases/latest), then:
+
 ```bash
-./pack.sh
 gnome-extensions install --force scroll-speed@griffit.gmail.com.shell-extension.zip
 ```
+
+(From a checkout, `./pack.sh` builds that zip.) It needs Python 3, which every
+GNOME distribution ships.
 
 Log out and back in (Wayland cannot load a new extension into a running
 shell), enable *Scroll Speed*, open its preferences and:
@@ -132,7 +138,7 @@ without changing the preferences.
 
 `tests/run.sh` runs everything:
 
-- 60 unit tests of the scaling logic: the wheel (remainders, direction
+- 61 unit tests of the scaling logic: the wheel (remainders, direction
   changes, acceleration, low-resolution mice), the touchpad (scroll, pinch,
   resting thumb, click-and-drag, three fingers, a finger lifting mid-scroll,
   the limits libinput puts on sudden motion) and the pointing stick;
@@ -152,9 +158,10 @@ Checked by hand on GNOME 51:
   stopped on disable, restarted after a crash;
 - the udev rule in `udevadm test`: mice, the touchpad, the pointing stick and
   uinput get access, the keyboard does not, a clone gets its `MOUSE_DPI` back;
-- the polkit prompt, on a ThinkPad.
+- the polkit prompt and two-finger scrolling on a real touchpad (ThinkPad,
+  Synaptics I2C), from the preferences window.
 
-Not tested yet: a physical mouse, touchpad or pointing stick end to end.
+Not tested yet on physical hardware: a wheel mouse and a pointing stick.
 
 `tests/prefs_preview.js` opens the preferences window outside the shell and
 can save it as a PNG.

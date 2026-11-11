@@ -337,12 +337,18 @@ class TouchpadTransformerTest(unittest.TestCase):
             pad.scroll(1, dy=speed)
             for slot in (0, 1):
                 step = (pad.shown[slot][1] - previous[slot]) / RES * 12 / 7
-                self.assertLessEqual(step, 20.0)
-                self.assertLessEqual(step - last_step[slot], 7.0)
+                # Never amplified past what libinput accepts as a first step.
+                self.assertLessEqual(step, max(7.0, speed / RES * 12 / 7 + 0.2))
                 previous[slot] = pad.shown[slot][1]
                 last_step[slot] = step
-        # Still clearly faster than the fingers.
-        self.assertGreater(pad.shown[0][1] - 40, 2 * (pad.source[0][1] - 40))
+        # Still faster than the fingers.
+        self.assertGreater(pad.shown[0][1] - 40, pad.source[0][1] - 40)
+
+    def test_moderate_scroll_gets_the_full_factor(self):
+        pad = Pad(3.0)
+        pad.two_fingers(y=10)
+        pad.scroll(15, dy=8)        # 95 mm/s, tripled: well below the cap
+        self.assertEqual(pad.shown[0][1], 40 + 15 * 8 * 3)
 
     def test_slot_events_keep_the_clone_consistent(self):
         pad = Pad(0.5)

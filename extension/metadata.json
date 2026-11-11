@@ -13,5 +13,6 @@
   ],
   "settings-schema": "org.gnome.shell.extensions.scroll-speed",
   "gettext-domain": "scroll-speed",
-  "version-name": "0.2"
+  "version-name": "0.2",
+  "url": "https://github.com/d101c/scroll-speed"
 }

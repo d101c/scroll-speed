@@ -454,7 +454,10 @@ class TouchpadTransformer:
             part = (share * extra[0], share * extra[1])
             for touch in pair:
                 step = self._step_mm(touch, part, now)
-                if step is not None and step > min(JUMP_MAX_MM, touch.step_mm + JUMP_RISE_MM):
+                # libinput forgets the previous step whenever it restarts a
+                # touch's history (a finger landing, a gesture starting), so
+                # the rise is counted from zero.
+                if step is not None and step > JUMP_RISE_MM:
                     return False
             return True
 
