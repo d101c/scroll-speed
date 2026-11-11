@@ -50,7 +50,7 @@ for (const preset of presets) {
 
 const app = new Adw.Application({application_id: 'dev.griffit.ScrollSpeedPreview'});
 app.connect('activate', () => {
-    const window = new Adw.PreferencesWindow({application: app, default_width: 640, default_height: 760});
+    const window = new Adw.PreferencesWindow({application: app, default_width: 640, default_height: 1040});
     prefs.fillPreferencesWindow(window);
     window.present();
     if (!output)
