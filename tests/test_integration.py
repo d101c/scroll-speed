@@ -200,6 +200,34 @@ class HelperIntegrationTest(unittest.TestCase):
         self.wait_status(lambda s: s['neutral'] and not s['devices'], 'a disabled status')
         self.assertFalse(self.source_is_grabbed())
 
+    def test_neutral_configuration_waits_for_a_held_button(self):
+        # Dragging the speed slider across 1x must not cut the drag short.
+        self.start('--vertical', '0.5')
+        self.wait_active()
+        self.emit([(h.EV_KEY, BTN_TRIGGER, 1), SYN])
+        self.assertEqual(self.read_clone(), [(h.EV_KEY, BTN_TRIGGER, 1), SYN])
+
+        self.configure(vertical=1.0, horizontal=1.0)
+        self.wait_status(lambda s: s['neutral'], 'a neutral status')
+        time.sleep(0.3)
+        self.assertTrue(self.source_is_grabbed())
+        self.emit(detent())  # forwarded at the normal speed meanwhile
+        self.assertEqual(self.read_clone(), [
+            (h.EV_REL, h.REL_WHEEL_HI_RES, 120), (h.EV_REL, h.REL_WHEEL, 1), SYN])
+
+        self.configure(vertical=2.0, horizontal=2.0)  # the drag goes on past 1x
+        self.wait_status(lambda s: s['config']['vertical'] == 2.0, 'the new factor')
+        self.emit(detent())
+        self.assertEqual(self.read_clone(), [
+            (h.EV_REL, h.REL_WHEEL_HI_RES, 240), (h.EV_REL, h.REL_WHEEL, 2), SYN])
+
+        self.configure(vertical=1.0, horizontal=1.0)
+        self.wait_status(lambda s: s['neutral'], 'a neutral status')
+        self.emit([(h.EV_KEY, BTN_TRIGGER, 0), SYN])
+        self.wait_status(lambda s: not s['devices'], 'the mouse to be given back')
+        wait_for(lambda: find_clone() is None, what='the clone to disappear')
+        self.assertFalse(self.source_is_grabbed())
+
     def test_does_not_grab_while_a_button_is_held(self):
         self.emit([(h.EV_KEY, BTN_TRIGGER, 1), SYN])
         self.start('--vertical', '0.5')

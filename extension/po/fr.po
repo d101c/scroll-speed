@@ -117,3 +117,9 @@ msgid "Scroll here to feel the speed; changes apply immediately."
 msgstr ""
 "Faites défiler ici pour sentir la vitesse ; les changements s'appliquent "
 "immédiatement."
+
+msgid "The virtual input device is not available"
+msgstr "Le périphérique d'entrée virtuel n'est pas disponible"
+
+msgid "Restart the computer so that the uinput kernel module is loaded."
+msgstr "Redémarrez l'ordinateur pour que le module noyau uinput soit chargé."

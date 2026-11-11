@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: scroll-speed 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-11 18:06+0100\n"
+"POT-Creation-Date: 2026-11-11 18:26+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -125,34 +125,42 @@ msgid "Authorize again…"
 msgstr ""
 
 #: prefs.js:230
-msgid "No wheel mouse detected"
+msgid "The virtual input device is not available"
 msgstr ""
 
 #: prefs.js:231
+msgid "Restart the computer so that the uinput kernel module is loaded."
+msgstr ""
+
+#: prefs.js:236
+msgid "No wheel mouse detected"
+msgstr ""
+
+#: prefs.js:237
 msgid "Plug in a mouse: it will be picked up within a few seconds."
 msgstr ""
 
-#: prefs.js:240
+#: prefs.js:246
 msgid "Remove the authorization"
 msgstr ""
 
-#: prefs.js:241
+#: prefs.js:247
 msgid ""
 "Deletes the udev rule. Access already granted lasts until the next restart."
 msgstr ""
 
-#: prefs.js:242
+#: prefs.js:248
 msgid "Remove…"
 msgstr ""
 
-#: prefs.js:243
+#: prefs.js:249
 msgid "Authorization removed"
 msgstr ""
 
-#: prefs.js:309
+#: prefs.js:315
 msgid "Try it"
 msgstr ""
 
-#: prefs.js:310
+#: prefs.js:316
 msgid "Scroll here to feel the speed; changes apply immediately."
 msgstr ""

@@ -7,6 +7,8 @@ vite. Fonctionne dans toutes les applications, sous Wayland comme sous X11.
 
 [English version](README.md)
 
+![Préférences](docs/preferences.png)
+
 État : 0.1, construit et testé sur GNOME 51 / Ubuntu 26.10. Toute la chaîne
 est couverte par des tests automatiques sur de vrais périphériques noyau, mais
 elle n'a pas encore servi avec une souris physique (voir
@@ -111,11 +113,12 @@ Lua, l'assistant pourra être remplacé sans toucher aux préférences.
 
 - 24 tests unitaires de la mise à l'échelle (restes, changements de sens,
   accélération, souris basse résolution) ;
-- 11 tests de bout en bout de l'assistant sur de vrais périphériques noyau :
+- 12 tests de bout en bout de l'assistant sur de vrais périphériques noyau :
   une fausse source créée avec uinput est capturée, clonée et mise à
   l'échelle, les réglages changent à chaud, la souris est rendue en réglage
-  neutre, à l'arrêt et sur SIGTERM, débranchement à chaud, un bouton maintenu
-  retarde la capture, un second assistant refuse de démarrer ;
+  neutre (jamais au milieu d'un clic), à l'arrêt et sur SIGTERM, débranchement
+  à chaud, un bouton maintenu retarde la capture, un second assistant refuse
+  de démarrer ;
 - tests unitaires de la logique des préférences, et de la règle udev exacte
   qu'écrit la commande d'installation (`udevadm verify`).
 

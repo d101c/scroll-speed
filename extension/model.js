@@ -55,6 +55,10 @@ export function summarize(probe, ruleInstalled) {
         return {kind: 'helper-failed', devices: []};
 
     const devices = probe.devices ?? [];
+    // No /dev/uinput at all: the kernel module is not loaded, and replugging
+    // the mouse would not change that.
+    if (probe.uinput === 'missing' && ruleInstalled)
+        return {kind: 'uinput-missing', devices};
     const blocked = probe.uinput !== 'ok' || devices.some(device => !device.access);
     if (blocked)
         return {kind: ruleInstalled ? 'authorization-pending' : 'needs-authorization', devices};

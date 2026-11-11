@@ -225,6 +225,12 @@ export default class ScrollSpeedPreferences extends ExtensionPreferences {
                     _('Unplug the mouse and plug it back in, or authorize again.'),
                     _('Authorize again…'), installRule, false));
                 break;
+            case 'uinput-missing':
+                statusRows.push(new Adw.ActionRow({
+                    title: _('The virtual input device is not available'),
+                    subtitle: _('Restart the computer so that the uinput kernel module is loaded.'),
+                }));
+                break;
             case 'no-mouse':
                 statusRows.push(new Adw.ActionRow({
                     title: _('No wheel mouse detected'),

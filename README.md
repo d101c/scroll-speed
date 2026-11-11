@@ -7,6 +7,8 @@ Wayland and X11.
 
 [Version française](README.fr.md)
 
+![Preferences](docs/preferences.png)
+
 Status: 0.1, built and tested on GNOME 51 / Ubuntu 26.10. The whole chain is
 covered by automated tests on real kernel devices, but it has not yet been
 used with a physical mouse (see [What is tested](#what-is-tested)).
@@ -104,10 +106,11 @@ without changing the preferences.
 
 - 24 unit tests of the scaling logic (remainders, direction changes,
   acceleration, low-resolution mice);
-- 11 end-to-end tests of the helper against real kernel devices: a fake
+- 12 end-to-end tests of the helper against real kernel devices: a fake
   source created with uinput is grabbed, cloned and rescaled, settings change
-  live, the mouse is given back on neutral settings, on exit and on SIGTERM,
-  hot-unplug, a held button delays the grab, a second helper refuses to start;
+  live, the mouse is given back on neutral settings (but never in the middle
+  of a click), on exit and on SIGTERM, hot-unplug, a held button delays the
+  grab, a second helper refuses to start;
 - unit tests of the preferences logic, and of the exact udev rule the install
   command writes (`udevadm verify`).
 

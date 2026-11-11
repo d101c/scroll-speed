@@ -57,6 +57,8 @@ check('uinput denied', model.summarize({uinput: 'denied', devices: [mouse]}, fal
     'needs-authorization');
 check('uinput missing', model.summarize({uinput: 'missing', devices: []}, false).kind,
     'needs-authorization');
+check('uinput missing with the rule installed', model.summarize({uinput: 'missing', devices: []}, true).kind,
+    'uinput-missing');
 check('mouse denied', model.summarize({uinput: 'ok', devices: [{...mouse, access: false}]}, false).kind,
     'needs-authorization');
 check('rule installed but still denied',

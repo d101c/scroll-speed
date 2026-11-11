@@ -233,6 +233,9 @@ def normalize_config(raw, base=None):
     return config
 
 
+NEUTRAL_CONFIG = normalize_config({})
+
+
 def is_neutral(config):
     """True when the configuration would leave wheel events unchanged."""
     return (not config['enabled'] or
@@ -425,9 +428,9 @@ def uinput_state():
 # How long a fresh clone is left alone so the compositor can open it.
 CLONE_SETTLE = 0.3
 RESCAN_INTERVAL = 2.0
-# A mouse grabbed by another program (an input remapper…) is left alone for
-# this long before the next attempt.
-BUSY_RETRY = 30.0
+# A mouse that cannot be taken (grabbed by an input remapper, clone creation
+# failing…) is left alone for this long before the next attempt.
+RETRY_DELAY = 30.0
 
 
 class Mouse:
@@ -465,10 +468,12 @@ class Mouse:
         if time.monotonic() < self.ready_at or keys_down(self.fd):
             return False
         fcntl.ioctl(self.fd, EVIOCGRAB, 1)
+        # What is queued predates the grab and already reached the compositor.
+        # A press landing after this drain stays queued and is forwarded.
+        self.drain()
         if keys_down(self.fd):
             fcntl.ioctl(self.fd, EVIOCGRAB, 0)
             return False
-        self.drain()
         self.grabbed = True
         self.state = 'active'
         self.transformer.reset()
@@ -535,18 +540,24 @@ class Mouse:
 
 class Helper:
     def __init__(self, config, forced_devices=None, stdin_control=False):
-        self.config = config
+        self.set_config(config)
         self.forced = list(forced_devices or [])
         self.stdin_control = stdin_control
         self.selector = selectors.DefaultSelector()
         self.mice = {}
         self.denied = {}
-        self.busy = {}
+        self.backoff = {}
         self.running = True
         self.stdin_buffer = b''
         self.last_status = None
         self.next_scan = 0.0
         self.changed = True
+
+    def set_config(self, config):
+        self.config = config
+        self.neutral = is_neutral(config)
+        # What the wheel is multiplied by right now.
+        self.applied = NEUTRAL_CONFIG if self.neutral else config
 
     # -- device bookkeeping
 
@@ -564,19 +575,18 @@ class Helper:
             if path not in candidates:
                 self.release(path)
         self.denied = {}
-        if is_neutral(self.config):
-            self.busy = {}
-            for path in list(self.mice):
-                self.release(path)
+        if self.neutral:
+            self.backoff = {}
+            self.release_idle()
             for path, name in candidates.items():
                 if not os.access(path, os.R_OK):
                     self.denied[path] = name
             return
         now = time.monotonic()
-        self.busy = {path: entry for path, entry in self.busy.items()
-                     if path in candidates and entry[1] > now}
+        self.backoff = {path: entry for path, entry in self.backoff.items()
+                        if path in candidates and entry[1] > now}
         for path, name in candidates.items():
-            if path in self.mice or path in self.busy:
+            if path in self.mice or path in self.backoff:
                 continue
             mouse = Mouse(path, name)
             try:
@@ -587,10 +597,26 @@ class Helper:
                 continue
             except OSError as error:
                 mouse.close()
-                log('cannot use %s: %s' % (path, error))
+                self.postpone(mouse, error)
                 continue
             self.mice[path] = mouse
             self.selector.register(mouse.fd, selectors.EVENT_READ, mouse)
+
+    def postpone(self, mouse, error):
+        """Leaves a mouse that could not be taken alone for a while, instead of
+        retrying (and logging, and flashing a clone) at every scan."""
+        log('cannot use %s: %s' % (mouse.path, error))
+        self.backoff[mouse.path] = (mouse.name, time.monotonic() + RETRY_DELAY,
+                                    error.errno == errno.EBUSY)
+        self.changed = True
+
+    def release_idle(self):
+        """With a neutral configuration the mice are given back, but not in the
+        middle of a click or drag: a mouse with a button held keeps being
+        forwarded, unscaled, until the button is up."""
+        for path, mouse in list(self.mice.items()):
+            if not mouse.down:
+                self.release(path)
 
     def release(self, path):
         mouse = self.mice.pop(path, None)
@@ -619,7 +645,7 @@ class Helper:
             if not line.strip():
                 continue
             try:
-                self.config = normalize_config(json.loads(line), self.config)
+                self.set_config(normalize_config(json.loads(line), self.config))
             except (ValueError, TypeError) as error:
                 log('ignored control line: %s' % error)
                 continue
@@ -635,10 +661,10 @@ class Helper:
         devices += [{'name': name, 'path': path, 'state': 'denied'}
                     for path, name in sorted(self.denied.items())]
         devices += [{'name': name, 'path': path, 'state': 'busy'}
-                    for path, (name, _retry) in sorted(self.busy.items())]
+                    for path, (name, _retry, busy) in sorted(self.backoff.items()) if busy]
         status = {
             'uinput': uinput_state(),
-            'neutral': is_neutral(self.config),
+            'neutral': self.neutral,
             'config': self.config,
             'devices': devices,
         }
@@ -679,10 +705,10 @@ class Helper:
                     try:
                         self.changed |= mouse.try_grab()
                     except OSError as error:
-                        log('cannot grab %s: %s' % (mouse.path, error))
                         self.release(mouse.path)
-                        if error.errno == errno.EBUSY:
-                            self.busy[mouse.path] = (mouse.name, now + BUSY_RETRY)
+                        self.postpone(mouse, error)
+                if self.neutral:
+                    self.release_idle()
                 self.report()
                 timeout = 0.05 if any(not m.grabbed for m in self.mice.values()) \
                     else max(0.0, self.next_scan - time.monotonic())
@@ -702,7 +728,7 @@ class Helper:
 
     def pump(self, mouse):
         try:
-            mouse.forward(self.config)
+            mouse.forward(self.applied)
         except BlockingIOError:
             pass
         except OSError as error:
