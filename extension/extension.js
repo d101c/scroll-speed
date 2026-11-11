@@ -4,7 +4,7 @@ import GLib from 'gi://GLib';
 
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 
-import {helperConfig} from './model.js';
+import {settingsConfig} from './model.js';
 
 const SIGTERM = 15;
 // A helper that dies is restarted after a growing delay, a few times at most.
@@ -30,17 +30,7 @@ export default class ScrollSpeedExtension extends Extension {
         this._stopHelper();
     }
 
-    _config() {
-        return helperConfig({
-            enabled: this._settings.get_boolean('enabled'),
-            vertical: this._settings.get_double('vertical-factor'),
-            horizontalLinked: this._settings.get_boolean('horizontal-linked'),
-            horizontal: this._settings.get_double('horizontal-factor'),
-            acceleration: this._settings.get_double('acceleration'),
-        });
-    }
-
-    // The helper rescales the wheel below the compositor; it takes its
+    // The helper rescales scrolling below the compositor; it takes its
     // configuration as JSON lines on stdin and exits when stdin closes, so it
     // never outlives the shell.
     _startHelper() {
@@ -111,7 +101,7 @@ export default class ScrollSpeedExtension extends Extension {
             this._stale = true;
             return;
         }
-        const line = new GLib.Bytes(new TextEncoder().encode(`${JSON.stringify(this._config())}\n`));
+        const line = new GLib.Bytes(new TextEncoder().encode(`${JSON.stringify(settingsConfig(this._settings))}\n`));
         this._writing = true;
         stdin.write_bytes_async(line, GLib.PRIORITY_DEFAULT, null,
             (_stream, result) => {

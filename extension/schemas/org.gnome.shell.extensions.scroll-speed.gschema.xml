@@ -4,8 +4,8 @@
           path="/org/gnome/shell/extensions/scroll-speed/">
     <key name="enabled" type="b">
       <default>true</default>
-      <summary>Change the wheel speed</summary>
-      <description>When off, mice are left untouched and scroll at their normal speed.</description>
+      <summary>Change the scroll speed</summary>
+      <description>When off, every device is left untouched and scrolls at its normal speed.</description>
     </key>
     <key name="vertical-factor" type="d">
       <range min="0.05" max="20"/>
@@ -29,6 +29,18 @@
       <default>0.0</default>
       <summary>Wheel acceleration</summary>
       <description>How much further the view scrolls when the wheel spins fast. 0 disables acceleration.</description>
+    </key>
+    <key name="touchpad-factor" type="d">
+      <range min="0.05" max="20"/>
+      <default>1.0</default>
+      <summary>Touchpad scroll speed</summary>
+      <description>Multiplier applied to two-finger scrolling on touchpads. 1.0 is the normal speed.</description>
+    </key>
+    <key name="pointingstick-factor" type="d">
+      <range min="0.05" max="20"/>
+      <default>1.0</default>
+      <summary>Pointing stick scroll speed</summary>
+      <description>Multiplier applied to scrolling with the middle button of a pointing stick held. 1.0 is the normal speed.</description>
     </key>
   </schema>
 </schemalist>

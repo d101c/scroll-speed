@@ -8,9 +8,9 @@ import {ExtensionPreferences, gettext as _} from 'resource:///org/gnome/Shell/Ex
 
 import {
     SLIDER_MIN, SLIDER_MAX, sliderToFactor, factorToSlider, formatFactor,
-    helperConfig, isNeutral, summarize
+    settingsConfig, kindIsNeutral, summarize
 } from './model.js';
-import {RULE_PATH, installArgv, removeArgv} from './permission.js';
+import {RULE_PATH, ruleState, installArgv, removeArgv} from './permission.js';
 
 const PROBE_INTERVAL_S = 3;
 const SLIDER_MARKS = [0.25, 0.5, 1, 2, 4];
@@ -110,18 +110,19 @@ export default class ScrollSpeedPreferences extends ExtensionPreferences {
         window.add(page);
 
         // -- speed
+        const general = new Adw.PreferencesGroup();
+        page.add(general);
+        const enabled = new Adw.SwitchRow({
+            title: _('Change the scroll speed'),
+            subtitle: _('1× is the normal speed'),
+        });
+        settings.bind('enabled', enabled, 'active', Gio.SettingsBindFlags.DEFAULT);
+        general.add(enabled);
+
         const speed = new Adw.PreferencesGroup({title: _('Mouse wheel')});
         page.add(speed);
 
-        const enabled = new Adw.SwitchRow({
-            title: _('Change the wheel speed'),
-            subtitle: _('Touchpads and pointing sticks are not affected'),
-        });
-        settings.bind('enabled', enabled, 'active', Gio.SettingsBindFlags.DEFAULT);
-        speed.add(enabled);
-
-        const vertical = speedRow(settings, 'vertical-factor', _('Scroll speed'),
-            _('1× is the normal speed'));
+        const vertical = speedRow(settings, 'vertical-factor', _('Scroll speed'), '');
         speed.add(vertical);
 
         const linked = new Adw.SwitchRow({title: _('Same speed for horizontal scrolling')});
@@ -135,13 +136,31 @@ export default class ScrollSpeedPreferences extends ExtensionPreferences {
         const acceleration = accelerationRow(settings);
         speed.add(acceleration);
 
-        for (const row of [vertical, linked, horizontal, acceleration])
+        // Shown once a device of that kind has been detected.
+        const touchpadGroup = new Adw.PreferencesGroup({title: _('Touchpad'), visible: false});
+        page.add(touchpadGroup);
+        const touchpad = speedRow(settings, 'touchpad-factor', _('Scroll speed'),
+            _('Two-finger scrolling'));
+        touchpadGroup.add(touchpad);
+
+        const stickGroup = new Adw.PreferencesGroup({title: _('Pointing stick'), visible: false});
+        page.add(stickGroup);
+        const stick = speedRow(settings, 'pointingstick-factor', _('Scroll speed'),
+            _('Middle button held'));
+        stickGroup.add(stick);
+
+        for (const row of [vertical, linked, horizontal, acceleration, touchpad, stick])
             settings.bind('enabled', row, 'sensitive', Gio.SettingsBindFlags.GET);
 
         // -- status
-        const status = new Adw.PreferencesGroup({title: _('Mice')});
+        const status = new Adw.PreferencesGroup({title: _('Devices')});
         page.add(status);
         let statusRows = [];
+        const kindLabels = {
+            mouse: _('Mouse'),
+            touchpad: _('Touchpad'),
+            pointingstick: _('Pointing stick'),
+        };
 
         const authorize = (argv, done) => {
             let process;
@@ -185,24 +204,23 @@ export default class ScrollSpeedPreferences extends ExtensionPreferences {
                 state = _('Normal speed');
             else
                 state = _('Starting…');
-            const row = new Adw.ActionRow({title: device.name, subtitle: device.path});
+            const row = new Adw.ActionRow({
+                title: device.name,
+                subtitle: kindLabels[device.kind] ?? '',
+            });
             row.add_suffix(new Gtk.Label({label: state, css_classes: ['dim-label']}));
             return row;
         };
 
-        const render = (probe, ruleInstalled) => {
+        const render = (probe, rule) => {
             for (const row of statusRows)
                 status.remove(row);
             statusRows = [];
 
-            const summary = summarize(probe, ruleInstalled);
-            const neutral = isNeutral(helperConfig({
-                enabled: settings.get_boolean('enabled'),
-                vertical: settings.get_double('vertical-factor'),
-                horizontalLinked: settings.get_boolean('horizontal-linked'),
-                horizontal: settings.get_double('horizontal-factor'),
-                acceleration: settings.get_double('acceleration'),
-            }));
+            const summary = summarize(probe, rule);
+            const config = settingsConfig(settings);
+            touchpadGroup.visible = summary.devices.some(device => device.kind === 'touchpad');
+            stickGroup.visible = summary.devices.some(device => device.kind === 'pointingstick');
             const installRule = () =>
                 authorize(installArgv(), _('Authorization granted'));
 
@@ -216,13 +234,19 @@ export default class ScrollSpeedPreferences extends ExtensionPreferences {
             case 'needs-authorization':
                 statusRows.push(buttonRow(
                     _('Authorization needed'),
-                    _('Let your session read the mouse and replay it with the new wheel speed. Asked once, with your password.'),
+                    _('Let your session read the mouse, touchpad and pointing stick, and replay them with the new scroll speed. Asked once, with your password.'),
+                    _('Authorize…'), installRule, true));
+                break;
+            case 'authorization-outdated':
+                statusRows.push(buttonRow(
+                    _('Authorization to renew'),
+                    _('The one installed by an earlier version only covers mice, not touchpads and pointing sticks.'),
                     _('Authorize…'), installRule, true));
                 break;
             case 'authorization-pending':
                 statusRows.push(buttonRow(
                     _('Authorization installed, but not effective yet'),
-                    _('Unplug the mouse and plug it back in, or authorize again.'),
+                    _('Authorize again. If that does not help, restart the computer.'),
                     _('Authorize again…'), installRule, false));
                 break;
             case 'uinput-missing':
@@ -231,17 +255,17 @@ export default class ScrollSpeedPreferences extends ExtensionPreferences {
                     subtitle: _('Restart the computer so that the uinput kernel module is loaded.'),
                 }));
                 break;
-            case 'no-mouse':
+            case 'no-device':
                 statusRows.push(new Adw.ActionRow({
-                    title: _('No wheel mouse detected'),
+                    title: _('No mouse, touchpad or pointing stick detected'),
                     subtitle: _('Plug in a mouse: it will be picked up within a few seconds.'),
                 }));
                 break;
             }
             for (const device of summary.devices)
-                statusRows.push(deviceRow(device, neutral));
+                statusRows.push(deviceRow(device, kindIsNeutral(config, device.kind)));
 
-            if (ruleInstalled) {
+            if (rule !== 'missing') {
                 statusRows.push(buttonRow(
                     _('Remove the authorization'),
                     _('Deletes the udev rule. Access already granted lasts until the next restart.'),
@@ -252,22 +276,22 @@ export default class ScrollSpeedPreferences extends ExtensionPreferences {
                 status.add(row);
         };
 
-        // The helper's --probe mode reports the mice and permissions as JSON.
+        // The helper's --probe mode reports the devices and permissions as JSON.
         const helper = this.dir.get_child('helper').get_child('scroll_speed_helper.py');
         const rule = Gio.File.new_for_path(RULE_PATH);
         let closed = false;
         let probing = false;
 
-        const ruleInstalled = () => new Promise(resolve => {
-            rule.query_info_async('standard::type', Gio.FileQueryInfoFlags.NONE,
-                GLib.PRIORITY_DEFAULT, null, (_file, result) => {
-                    try {
-                        rule.query_info_finish(result);
-                        resolve(true);
-                    } catch {
-                        resolve(false);
-                    }
-                });
+        // 'missing', 'outdated' or 'current', from the contents of the rule file.
+        const readRule = () => new Promise(resolve => {
+            rule.load_contents_async(null, (_file, result) => {
+                try {
+                    const [, contents] = rule.load_contents_finish(result);
+                    resolve(ruleState(new TextDecoder().decode(contents)));
+                } catch {
+                    resolve(ruleState(null));
+                }
+            });
         });
 
         const runProbe = () => new Promise(resolve => {
@@ -293,7 +317,7 @@ export default class ScrollSpeedPreferences extends ExtensionPreferences {
             if (probing || closed)
                 return;
             probing = true;
-            const [probe, installed] = await Promise.all([runProbe(), ruleInstalled()]);
+            const [probe, installed] = await Promise.all([runProbe(), readRule()]);
             probing = false;
             if (!closed)
                 render(probe, installed);

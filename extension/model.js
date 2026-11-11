@@ -33,36 +33,72 @@ export function formatFactor(factor, locale = undefined) {
     return `${factor.toLocaleString(locale, {maximumFractionDigits: 2})}×`;
 }
 
+export const KINDS = ['mouse', 'touchpad', 'pointingstick'];
+
 // The configuration line understood by the helper.
-export function helperConfig({enabled, vertical, horizontalLinked, horizontal, acceleration}) {
+export function helperConfig({
+    enabled, vertical, horizontalLinked, horizontal, acceleration,
+    touchpad = 1, pointingstick = 1,
+}) {
     return {
         enabled,
         vertical,
         horizontal: horizontalLinked ? vertical : horizontal,
         acceleration,
+        touchpad,
+        pointingstick,
     };
 }
 
+// The same, read from the extension's GSettings.
+export function settingsConfig(settings) {
+    return helperConfig({
+        enabled: settings.get_boolean('enabled'),
+        vertical: settings.get_double('vertical-factor'),
+        horizontalLinked: settings.get_boolean('horizontal-linked'),
+        horizontal: settings.get_double('horizontal-factor'),
+        acceleration: settings.get_double('acceleration'),
+        touchpad: settings.get_double('touchpad-factor'),
+        pointingstick: settings.get_double('pointingstick-factor'),
+    });
+}
+
+// True when devices of that kind are left at their normal speed.
+export function kindIsNeutral(config, kind) {
+    if (!config.enabled)
+        return true;
+    if (kind === 'mouse')
+        return config.vertical === 1 && config.horizontal === 1 && config.acceleration === 0;
+    return config[kind] === 1;
+}
+
 export function isNeutral(config) {
-    return !config.enabled ||
-        (config.vertical === 1 && config.horizontal === 1 && config.acceleration === 0);
+    return KINDS.every(kind => kindIsNeutral(config, kind));
 }
 
 // Turns a helper `--probe` report into what the preferences should show.
-// `probe` is null when the helper could not be run at all.
-export function summarize(probe, ruleInstalled) {
+// `probe` is null when the helper could not be run at all; `rule` is the
+// state of the udev rule: 'missing', 'outdated' (written by a version that
+// handled fewer devices) or 'current'.
+export function summarize(probe, rule) {
     if (!probe)
         return {kind: 'helper-failed', devices: []};
 
     const devices = probe.devices ?? [];
-    // No /dev/uinput at all: the kernel module is not loaded, and replugging
-    // the mouse would not change that.
-    if (probe.uinput === 'missing' && ruleInstalled)
+    // No /dev/uinput at all: the kernel module is not loaded, and authorizing
+    // again would not change that.
+    if (probe.uinput === 'missing' && rule !== 'missing')
         return {kind: 'uinput-missing', devices};
     const blocked = probe.uinput !== 'ok' || devices.some(device => !device.access);
-    if (blocked)
-        return {kind: ruleInstalled ? 'authorization-pending' : 'needs-authorization', devices};
+    if (blocked) {
+        const kind = {
+            missing: 'needs-authorization',
+            outdated: 'authorization-outdated',
+            current: 'authorization-pending',
+        }[rule];
+        return {kind, devices};
+    }
     if (devices.length === 0)
-        return {kind: 'no-mouse', devices};
+        return {kind: 'no-device', devices};
     return {kind: 'ready', devices};
 }

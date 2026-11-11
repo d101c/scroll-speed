@@ -1,17 +1,19 @@
 # Scroll Speed
 
-Régler la vitesse de la molette de la souris sous GNOME, le réglage qui manque
-à côté de « Vitesse du pointeur ». Plus lent, plus rapide, une vitesse
-horizontale séparée, une accélération optionnelle quand la molette tourne
-vite. Fonctionne dans toutes les applications, sous Wayland comme sous X11.
+Régler la vitesse de défilement sous GNOME, le réglage qui manque à côté de
+« Vitesse du pointeur » : la molette de la souris, le défilement à deux doigts
+du pavé tactile et le défilement au bouton du milieu d'un TrackPoint, chacun
+plus lent ou plus rapide. La molette a aussi une vitesse horizontale séparée
+et une accélération optionnelle quand elle tourne vite. Fonctionne dans toutes
+les applications, sous Wayland comme sous X11.
 
 [English version](README.md)
 
 ![Préférences](docs/preferences.png)
 
-État : 0.1, construit et testé sur GNOME 51 / Ubuntu 26.10. Toute la chaîne
+État : 0.2, construit et testé sur GNOME 51 / Ubuntu 26.10. Toute la chaîne
 est couverte par des tests automatiques sur de vrais périphériques noyau, mais
-elle n'a pas encore servi avec une souris physique (voir
+elle a encore très peu servi sur du vrai matériel (voir
 [Ce qui est testé](#ce-qui-est-testé)).
 
 ## Installation
@@ -26,8 +28,9 @@ extension dans un Shell en cours d'exécution), activez *Scroll Speed*, ouvrez
 ses préférences et :
 
 1. cliquez une fois sur **Autoriser…** et saisissez votre mot de passe ;
-2. déplacez le curseur **Vitesse de défilement**. Le changement est immédiat ;
-   la zone *Essayer* en bas sert à le sentir.
+2. déplacez un curseur **Vitesse de défilement** (ceux du pavé tactile et du
+   TrackPoint apparaissent quand l'ordinateur en a un). Le changement est
+   immédiat ; la zone *Essayer* en bas sert à le sentir.
 
 Pour essayer sans fermer la session :
 
@@ -35,45 +38,63 @@ Pour essayer sans fermer la session :
 ./try-now.sh 0.5
 ```
 
-Le script demande la même autorisation si elle manque, puis divise la vitesse
-de la molette par deux jusqu'à Ctrl+C.
+Le script demande la même autorisation si elle manque, puis divise par deux
+la vitesse de défilement de la molette, du pavé tactile et du TrackPoint
+jusqu'à Ctrl+C.
 
 ## Fonctionnement
 
 ```
-souris ──► evdev (noyau) ──► assistant (capture + mise à l'échelle) ──► clone uinput ──► libinput ──► GNOME ──► applications
+périphérique ──► evdev (noyau) ──► assistant (capture + mise à l'échelle) ──► clone uinput ──► libinput ──► GNOME ──► applications
 ```
 
 `extension/helper/scroll_speed_helper.py` (Python, bibliothèque standard
-uniquement) capture chaque souris à molette, crée un clone virtuel avec la
-même identité et les mêmes boutons, et retransmet tous les événements tels
-quels sauf la molette. Les déplacements de molette sont multipliés par le
-facteur et émis au format haute résolution du noyau (120 unités par cran) :
-×0,5 arrive donc aux applications comme un demi-cran, pas comme « un cran sur
-deux ». Les applications qui ne comprennent que les crans entiers en reçoivent
-un chaque fois qu'un cran complet s'est accumulé.
+uniquement) capture chaque périphérique, crée un clone virtuel avec la même
+identité, et retransmet tous les événements tels quels sauf ce qui fait
+défiler :
+
+- **Molette.** Les déplacements de molette sont multipliés par le facteur et
+  émis au format haute résolution du noyau (120 unités par cran) : ×0,5 arrive
+  donc aux applications comme un demi-cran, pas comme « un cran sur deux ».
+  Les applications qui ne comprennent que les crans entiers en reçoivent un
+  chaque fois qu'un cran complet s'est accumulé.
+- **Pavé tactile.** Il n'y a pas d'événement de défilement à multiplier : le
+  noyau ne donne que la position des doigts, et libinput fait défiler de la
+  moyenne du mouvement de deux doigts. Tant que deux doigts exactement vont
+  dans le même sens, l'assistant décale les deux positions transmises de
+  (facteur − 1) × ce mouvement commun. La moyenne parcourt « facteur » fois la
+  distance ; l'écart et l'angle entre les doigts, dont est fait un pincement,
+  ne changent pas. Un doigt, trois doigts, un doigt qui bouge à côté d'un
+  pouce posé et un cliquer-glisser sont transmis tels quels. Les 2 premiers
+  millimètres d'un défilement aussi, pour que libinput distingue tapes,
+  défilements et pincements exactement comme avant.
+- **TrackPoint.** Le mouvement fait pendant que le bouton du milieu est
+  maintenu, que libinput transforme en défilement, est multiplié par le
+  facteur.
 
 L'extension lance l'assistant, lui envoie les réglages au fil des changements
 et l'arrête quand elle est désactivée. L'assistant s'arrête de lui-même si le
-Shell disparaît, ce qui rend la souris. À la vitesse 1× sans accélération, les
-souris ne sont pas touchées du tout.
+Shell disparaît, ce qui rend les périphériques. Un périphérique dont la
+vitesse est 1× n'est pas touché du tout.
 
 ### L'autorisation
 
-L'assistant doit lire la souris et en créer une virtuelle. **Autoriser…**
-installe `/etc/udev/rules.d/70-scroll-speed.rules` via polkit :
+L'assistant doit lire les périphériques et en créer des virtuels.
+**Autoriser…** installe `/etc/udev/rules.d/70-scroll-speed.rules` via polkit :
 
-- accès à `/dev/uinput` et aux souris pour l'utilisateur connecté sur le poste
-  (`uaccess`, le mécanisme qu'udev emploie pour les manettes et les cartes
-  son) ;
-- claviers et TrackPoint exclus : la règle n'expose jamais les frappes ;
+- accès à `/dev/uinput`, aux souris, aux pavés tactiles et aux TrackPoint pour
+  l'utilisateur connecté sur le poste (`uaccess`, le mécanisme qu'udev emploie
+  pour les manettes et les cartes son) ;
+- claviers exclus : la règle n'expose jamais les frappes ;
 - les clones retrouvent l'entrée de la base matérielle de la souris qu'ils
   reproduisent (DPI, marqueur trackball), donc le pointeur bouge exactement
   comme avant.
 
 L'accès à `/dev/uinput` permet aux programmes de votre session de créer des
 périphériques d'entrée ; les règles udev de Steam font de même. **Retirer…**
-dans les préférences supprime la règle.
+dans les préférences supprime la règle. Une règle installée par la version 0.1
+ne couvre que les souris : les préférences demandent alors d'autoriser une
+fois de plus.
 
 ## Pourquoi pas une simple extension ?
 
@@ -91,34 +112,47 @@ C'est la première piste essayée, et elle est impossible sous GNOME 51 :
   `~/.config/libinput/plugins`, ce qui ne demanderait aucun privilège, mais
   Ubuntu compile libinput sans Lua.
 
-La molette est donc mise à l'échelle sous le compositeur. Si Mutter expose un
+Le pavé tactile a bien une clé `scroll-speed` dans
+`org.gnome.desktop.peripherals.touchpad`, mais Mutter 51 ne la lit pas.
+
+Le défilement est donc mis à l'échelle sous le compositeur. Si Mutter expose un
 jour la courbe de défilement, ou si les distributions activent les plugins
 Lua, l'assistant pourra être remplacé sans toucher aux préférences.
 
 ## Limites
 
-- Molettes de souris uniquement. Le défilement du pavé tactile est calculé
-  dans libinput et les TrackPoint défilent au bouton ; ni l'un ni l'autre
-  n'est concerné.
+- Pavé tactile : défilement à deux doigts uniquement, pas le défilement au
+  bord. Les pavés qui ne signalent pas chaque doigt séparément (anciens pavés
+  « semi-mt ») sont laissés tels quels. Sur un geste très rapide avec un
+  facteur supérieur à 1, l'accélération est plafonnée : libinput prendrait
+  sinon le mouvement pour un défaut matériel et le jetterait.
+- TrackPoint : un *glisser* au bouton du milieu est mis à l'échelle comme un
+  défilement, l'assistant ne pouvant pas les distinguer.
+- libinput ne filtre pas les rebonds des boutons d'un périphérique virtuel :
+  une souris dont un bouton usé double-clique perd cette protection pendant
+  que sa molette est mise à l'échelle.
 - Un périphérique combiné clavier + souris qui apparaît comme un seul nœud est
   laissé tel quel (la règle ne donne aucun accès aux claviers).
-- Une souris capturée par un autre programme (un remappeur) est ignorée, avec
-  une nouvelle tentative toutes les 30 secondes.
+- Un périphérique capturé par un autre programme (un remappeur) est ignoré,
+  avec une nouvelle tentative toutes les 30 secondes.
 - L'extension est désactivée sur l'écran de verrouillage, comme toute
-  extension : la molette y reprend sa vitesse normale.
+  extension : le défilement y reprend sa vitesse normale.
 
 ## Ce qui est testé
 
 `tests/run.sh` lance tout :
 
-- 24 tests unitaires de la mise à l'échelle (restes, changements de sens,
-  accélération, souris basse résolution) ;
-- 12 tests de bout en bout de l'assistant sur de vrais périphériques noyau :
+- 60 tests unitaires de la mise à l'échelle : la molette (restes, changements
+  de sens, accélération, souris basse résolution), le pavé tactile
+  (défilement, pincement, pouce posé, cliquer-glisser, trois doigts, doigt
+  levé en plein défilement, limites que libinput impose aux mouvements
+  brusques) et le TrackPoint ;
+- 18 tests de bout en bout de l'assistant sur de vrais périphériques noyau :
   une fausse source créée avec uinput est capturée, clonée et mise à
-  l'échelle, les réglages changent à chaud, la souris est rendue en réglage
-  neutre (jamais au milieu d'un clic), à l'arrêt et sur SIGTERM, débranchement
-  à chaud, un bouton maintenu retarde la capture, un second assistant refuse
-  de démarrer ;
+  l'échelle, les réglages changent à chaud, le périphérique est rendu en
+  réglage neutre (jamais au milieu d'un clic ou d'un toucher), à l'arrêt et
+  sur SIGTERM, débranchement à chaud, un bouton maintenu ou un doigt posé
+  retarde la capture, un second assistant refuse de démarrer ;
 - tests unitaires de la logique des préférences, et de la règle udev exacte
   qu'écrit la commande d'installation (`udevadm verify`).
 
@@ -128,10 +162,13 @@ Vérifié à la main sur GNOME 51 :
   GTK 4 d'exactement 0,5 (12/120 donne 0,1 ; 240/120 donne 2) ;
 - l'extension dans un Shell sans écran : assistant lancé, réglages transmis,
   arrêt à la désactivation, relance après un plantage ;
-- la règle udev dans `udevadm test` : souris et uinput reçoivent l'accès, pas
-  le clavier, un clone retrouve son `MOUSE_DPI`.
+- la règle udev dans `udevadm test` : souris, pavé tactile, TrackPoint et
+  uinput reçoivent l'accès, pas le clavier, un clone retrouve son
+  `MOUSE_DPI` ;
+- la fenêtre polkit, sur un ThinkPad.
 
-Pas encore testé : une souris physique de bout en bout, et la fenêtre polkit.
+Pas encore testé : une souris, un pavé tactile ou un TrackPoint physique de
+bout en bout.
 
 `tests/prefs_preview.js` ouvre la fenêtre de préférences hors du Shell et peut
 l'enregistrer en PNG.
