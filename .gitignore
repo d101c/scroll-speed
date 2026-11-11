@@ -1,0 +1,4 @@
+*.zip
+extension/schemas/gschemas.compiled
+extension/locale/
+__pycache__/

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.scroll-speed"
+          path="/org/gnome/shell/extensions/scroll-speed/">
+    <key name="enabled" type="b">
+      <default>true</default>
+      <summary>Change the wheel speed</summary>
+      <description>When off, mice are left untouched and scroll at their normal speed.</description>
+    </key>
+    <key name="vertical-factor" type="d">
+      <range min="0.05" max="20"/>
+      <default>1.0</default>
+      <summary>Vertical wheel speed</summary>
+      <description>Multiplier applied to vertical wheel scrolling. 1.0 is the normal speed.</description>
+    </key>
+    <key name="horizontal-linked" type="b">
+      <default>true</default>
+      <summary>Horizontal speed follows the vertical speed</summary>
+      <description>When on, horizontal wheel scrolling uses the vertical multiplier.</description>
+    </key>
+    <key name="horizontal-factor" type="d">
+      <range min="0.05" max="20"/>
+      <default>1.0</default>
+      <summary>Horizontal wheel speed</summary>
+      <description>Multiplier applied to horizontal wheel scrolling when it is not linked to the vertical speed.</description>
+    </key>
+    <key name="acceleration" type="d">
+      <range min="0" max="1"/>
+      <default>0.0</default>
+      <summary>Wheel acceleration</summary>
+      <description>How much further the view scrolls when the wheel spins fast. 0 disables acceleration.</description>
+    </key>
+  </schema>
+</schemalist>

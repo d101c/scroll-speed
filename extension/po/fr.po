@@ -1,0 +1,119 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: scroll-speed 0.1\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid "Acceleration"
+msgstr "Accélération"
+
+msgid "Scroll further when the wheel spins fast"
+msgstr "Défiler plus loin quand la molette tourne vite"
+
+msgid "Off"
+msgstr "Aucune"
+
+msgid "Line %d"
+msgstr "Ligne %d"
+
+msgid "Mouse wheel"
+msgstr "Molette de la souris"
+
+msgid "Change the wheel speed"
+msgstr "Modifier la vitesse de la molette"
+
+msgid "Touchpads and pointing sticks are not affected"
+msgstr "Les pavés tactiles et les TrackPoint ne sont pas concernés"
+
+msgid "Scroll speed"
+msgstr "Vitesse de défilement"
+
+msgid "1× is the normal speed"
+msgstr "1× = vitesse normale"
+
+msgid "Same speed for horizontal scrolling"
+msgstr "Même vitesse pour le défilement horizontal"
+
+msgid "Horizontal scroll speed"
+msgstr "Vitesse de défilement horizontal"
+
+msgid "Mice"
+msgstr "Souris"
+
+msgid "Nothing was changed"
+msgstr "Rien n'a été modifié"
+
+msgid "No access yet"
+msgstr "Pas encore d'accès"
+
+msgid "Active"
+msgstr "Active"
+
+msgid "Normal speed"
+msgstr "Vitesse normale"
+
+msgid "Starting…"
+msgstr "Démarrage…"
+
+msgid "Authorization granted"
+msgstr "Autorisation accordée"
+
+msgid "The helper could not be started"
+msgstr "L'assistant n'a pas pu démarrer"
+
+msgid "Scroll Speed needs Python 3, which was not found."
+msgstr "Scroll Speed a besoin de Python 3, qui est introuvable."
+
+msgid "Authorization needed"
+msgstr "Autorisation nécessaire"
+
+msgid ""
+"Let your session read the mouse and replay it with the new wheel speed. "
+"Asked once, with your password."
+msgstr ""
+"Permet à votre session de lire la souris et de la rejouer avec la nouvelle "
+"vitesse de molette. Demandée une seule fois, avec votre mot de passe."
+
+msgid "Authorize…"
+msgstr "Autoriser…"
+
+msgid "Authorization installed, but not effective yet"
+msgstr "Autorisation installée, mais pas encore effective"
+
+msgid "Unplug the mouse and plug it back in, or authorize again."
+msgstr "Débranchez puis rebranchez la souris, ou autorisez à nouveau."
+
+msgid "Authorize again…"
+msgstr "Autoriser à nouveau…"
+
+msgid "No wheel mouse detected"
+msgstr "Aucune souris à molette détectée"
+
+msgid "Plug in a mouse: it will be picked up within a few seconds."
+msgstr "Branchez une souris : elle sera prise en compte en quelques secondes."
+
+msgid "Remove the authorization"
+msgstr "Retirer l'autorisation"
+
+msgid ""
+"Deletes the udev rule. Access already granted lasts until the next restart."
+msgstr ""
+"Supprime la règle udev. L'accès déjà accordé reste valable jusqu'au prochain "
+"redémarrage."
+
+msgid "Remove…"
+msgstr "Retirer…"
+
+msgid "Authorization removed"
+msgstr "Autorisation retirée"
+
+msgid "Try it"
+msgstr "Essayer"
+
+msgid "Scroll here to feel the speed; changes apply immediately."
+msgstr ""
+"Faites défiler ici pour sentir la vitesse ; les changements s'appliquent "
+"immédiatement."

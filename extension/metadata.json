@@ -1,0 +1,17 @@
+{
+  "uuid": "scroll-speed@griffit.gmail.com",
+  "name": "Scroll Speed",
+  "description": "Set the speed of the mouse wheel, the setting GNOME does not have: slower, faster, a separate horizontal speed and optional acceleration when the wheel spins fast. Works in every application, Wayland and X11 alike.\n\nA compositor hands wheel events to applications before an extension can touch them, so the speed is changed where the events come from: a small Python helper (standard library only, bundled) reads the mouse and replays it through a virtual mouse with the wheel rescaled. This needs one authorization, asked from the preferences, which installs a udev rule giving your session access to mice and to /dev/uinput. Touchpads and pointing sticks are not affected.",
+  "shell-version": [
+    "45",
+    "46",
+    "47",
+    "48",
+    "49",
+    "50",
+    "51"
+  ],
+  "settings-schema": "org.gnome.shell.extensions.scroll-speed",
+  "gettext-domain": "scroll-speed",
+  "version-name": "0.1"
+}
