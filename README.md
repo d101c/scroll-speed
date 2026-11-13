@@ -11,7 +11,7 @@ and X11.
 
 ![Preferences](docs/preferences.png)
 
-Status: 0.2, for GNOME 51 (built and tested on Ubuntu 26.10). The whole chain is
+Status: 0.3, for GNOME 51 (built and tested on Ubuntu 26.10). The whole chain is
 covered by automated tests on real kernel devices; on physical hardware it has
 only been used on one laptop touchpad so far (see
 [What is tested](#what-is-tested)). Reports from other machines are welcome.
@@ -86,13 +86,15 @@ polkit:
 - access to `/dev/uinput` and to the event nodes of mice, touchpads and
   pointing sticks for the user logged in on the seat (`uaccess`, the mechanism
   udev uses for joysticks and sound cards);
-- keyboards are excluded, so the rule never exposes keystrokes;
+- physical keyboards are excluded from the event-node rules, so the helper
+  never captures them (but `/dev/uinput` itself is open, see below);
 - clones get the hardware-database entry of the mouse they mirror (DPI,
   trackball flag), so the pointer moves exactly as before.
 
 Granting access to `/dev/uinput` lets programs of your session create input
-devices; Steam's udev rules do the same. **Remove…** in the preferences
-deletes the rule. A rule installed by version 0.1 only covers mice: the
+devices; Steam's udev rules do the same. The helper runs as you, with no
+privilege. **Remove…** in the preferences deletes the rule; it stays installed until then, even after the extension is
+uninstalled. A rule installed by version 0.1 only covers mice: the
 preferences then ask to authorize once more.
 
 ## Why not a plain extension?

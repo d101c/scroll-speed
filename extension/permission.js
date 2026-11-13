@@ -1,19 +1,17 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-// The one privileged step: a udev rule that lets the user of the active
-// session read mice, touchpads and pointing sticks and create their virtual
-// counterparts. The commands run as root are fixed strings built here, never a
-// file a user process could edit.
+// The one privileged step: a udev rule giving the session user access to mice,
+// touchpads, pointing sticks and /dev/uinput. The commands run as root are
+// fixed strings built here, never a file a user process could edit.
 
 export const RULE_PATH = '/etc/udev/rules.d/70-scroll-speed.rules';
 
-// "uaccess" grants access to whoever is logged in on the seat, the way udev
-// already does for joysticks and sound cards. Keyboards are left out, so the
-// rule never exposes keystrokes. (A pointing stick is a mouse to udev.)
+// "uaccess" is what udev already uses for joysticks and sound cards. Physical
+// keyboards are excluded from the event-node rules (a pointing stick is a mouse
+// to udev); /dev/uinput, which can create virtual input devices, is not.
 //
-// The last two rules give a clone the hardware database entry of the mouse it
-// mirrors (resolution, trackball flag): udev only looks those up for devices
-// on a real bus, and without them libinput would move the pointer at a
-// different speed through the clone.
+// The last two rules give a clone the hwdb entry of the mouse it mirrors
+// (udev only looks it up on real buses); without it libinput would move the
+// pointer at a different speed through the clone.
 const CLONE = 'SUBSYSTEM=="input", KERNEL=="event*", ATTRS{phys}=="scroll-speed/clone"';
 const HWDB = bus => `IMPORT{builtin}="hwdb 'mouse:${bus}:v$attr{id/vendor}p$attr{id/product}:name:$attr{name}:'"`;
 

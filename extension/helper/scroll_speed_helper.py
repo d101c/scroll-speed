@@ -1256,10 +1256,15 @@ def log(message):
 
 def take_instance_lock():
     """Two helpers would fight over the same devices; returns the lock's file
-    descriptor (to keep open), or None when another helper already runs."""
-    directory = os.environ.get('XDG_RUNTIME_DIR') or '/tmp'
+    descriptor (to keep open), or None when another helper already runs.
+    The lock lives in $XDG_RUNTIME_DIR, which only the user can write; there is
+    no fallback to a shared directory such as /tmp. Raises OSError when that
+    directory is missing."""
+    directory = os.environ.get('XDG_RUNTIME_DIR')
+    if not directory:
+        raise OSError('XDG_RUNTIME_DIR is not set, cannot create the lock file')
     fd = os.open(os.path.join(directory, 'scroll-speed-%d.lock' % os.getuid()),
-                 os.O_WRONLY | os.O_CREAT, 0o600)
+                 os.O_WRONLY | os.O_CREAT | os.O_NOFOLLOW, 0o600)
     try:
         fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except OSError:
@@ -1295,10 +1300,12 @@ def main(argv=None):
                         help='two-finger scrolling factor of touchpads')
     parser.add_argument('--pointingstick', type=float, default=1.0,
                         help='middle-button scrolling factor of pointing sticks')
-    parser.add_argument('--device', action='append', default=[],
-                        help='use this event node instead of scanning for devices')
-    parser.add_argument('--kind', choices=KINDS, default='mouse',
-                        help='what the --device nodes are (default: mouse)')
+    dev = parser.add_argument_group(
+        'development options', 'used by the test suite; not needed in normal use')
+    dev.add_argument('--device', action='append', default=[],
+                     help='use this event node instead of scanning for devices')
+    dev.add_argument('--kind', choices=KINDS, default='mouse',
+                     help='what the --device nodes are (default: mouse)')
     parser.add_argument('--stdin-control', action='store_true',
                         help='read JSON configuration lines on stdin, exit on EOF')
     parser.add_argument('--probe', action='store_true',
@@ -1309,7 +1316,11 @@ def main(argv=None):
         print(json.dumps(probe()))
         return 0
 
-    lock = take_instance_lock()
+    try:
+        lock = take_instance_lock()
+    except OSError as error:
+        log('cannot take the instance lock: %s' % error)
+        return 4
     if lock is None:
         log('another helper is already running (is the Scroll Speed extension enabled?)')
         return 3

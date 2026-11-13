@@ -24,15 +24,14 @@ export default class ScrollSpeedExtension extends Extension {
         this._settings.disconnectObject(this);
         this._settings = null;
         if (this._restartId) {
-            GLib.source_remove(this._restartId);
+            GLib.Source.remove(this._restartId);
             this._restartId = 0;
         }
         this._stopHelper();
     }
 
-    // The helper rescales scrolling below the compositor; it takes its
-    // configuration as JSON lines on stdin and exits when stdin closes, so it
-    // never outlives the shell.
+    // The helper takes JSON configuration lines on stdin and exits when stdin
+    // closes, so it never outlives the shell.
     _startHelper() {
         const script = this.dir.get_child('helper').get_child('scroll_speed_helper.py');
         const launcher = new Gio.SubprocessLauncher({

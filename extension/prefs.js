@@ -17,7 +17,7 @@ const SLIDER_MARKS = [0.25, 0.5, 1, 2, 4];
 const TEST_LINES = 120;
 
 // A row with a logarithmic speed slider bound to a "factor" key.
-function speedRow(settings, key, title, subtitle) {
+function speedRow(settings, key, title, subtitle = '') {
     const row = new Adw.ActionRow({title, subtitle});
     const value = new Gtk.Label({width_chars: 7, xalign: 1, css_classes: ['numeric']});
     const scale = new Gtk.Scale({
@@ -109,7 +109,6 @@ export default class ScrollSpeedPreferences extends ExtensionPreferences {
         const page = new Adw.PreferencesPage();
         window.add(page);
 
-        // -- speed
         const general = new Adw.PreferencesGroup();
         page.add(general);
         const enabled = new Adw.SwitchRow({
@@ -122,14 +121,14 @@ export default class ScrollSpeedPreferences extends ExtensionPreferences {
         const speed = new Adw.PreferencesGroup({title: _('Mouse wheel')});
         page.add(speed);
 
-        const vertical = speedRow(settings, 'vertical-factor', _('Scroll speed'), '');
+        const vertical = speedRow(settings, 'vertical-factor', _('Scroll speed'));
         speed.add(vertical);
 
         const linked = new Adw.SwitchRow({title: _('Same speed for horizontal scrolling')});
         settings.bind('horizontal-linked', linked, 'active', Gio.SettingsBindFlags.DEFAULT);
         speed.add(linked);
 
-        const horizontal = speedRow(settings, 'horizontal-factor', _('Horizontal scroll speed'), '');
+        const horizontal = speedRow(settings, 'horizontal-factor', _('Horizontal scroll speed'));
         settings.bind('horizontal-linked', horizontal, 'visible', Gio.SettingsBindFlags.INVERT_BOOLEAN);
         speed.add(horizontal);
 
@@ -151,8 +150,6 @@ export default class ScrollSpeedPreferences extends ExtensionPreferences {
 
         for (const row of [vertical, linked, horizontal, acceleration, touchpad, stick])
             settings.bind('enabled', row, 'sensitive', Gio.SettingsBindFlags.GET);
-
-        // -- status
         const status = new Adw.PreferencesGroup({title: _('Devices')});
         page.add(status);
         let statusRows = [];
@@ -330,11 +327,9 @@ export default class ScrollSpeedPreferences extends ExtensionPreferences {
         });
         window.connect('close-request', () => {
             closed = true;
-            GLib.source_remove(timer);
+            GLib.Source.remove(timer);
             return false;
         });
-
-        // -- try it
         const tryIt = new Adw.PreferencesGroup({
             title: _('Try it'),
             description: _('Scroll here to feel the speed; changes apply immediately.'),

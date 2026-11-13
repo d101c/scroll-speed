@@ -1,12 +1,12 @@
 {
   "uuid": "scroll-speed@griffit.gmail.com",
   "name": "Scroll Speed",
-  "description": "Scrolling too fast, or too slow? GNOME lets you set the pointer speed, but not the scroll speed. Scroll Speed adds the missing setting.\n\n• Mouse wheel: from 0.1× to 5×, with a separate horizontal speed and optional acceleration when the wheel spins fast.\n• Touchpad: two-finger scrolling slower or faster. Pinch, taps, swipes and click-and-drag stay exactly as they are.\n• Pointing stick (TrackPoint): middle-button scrolling slower or faster.\n\nIt works in every application, on Wayland and X11, and changes apply while you move the slider. A device left at 1× is not touched at all.\n\nHow it works: GNOME hands scroll events to applications before an extension can change them, so a small bundled Python helper (standard library only) reads the device and replays it through a virtual one, with only the scrolling rescaled. This needs one authorization, asked from the preferences with your password: a udev rule that gives your session access to mice, touchpads and /dev/uinput, never to keyboards. The same window removes it.\n\nRequires Python 3. Touchpad edge scrolling is not affected. This is an early release: reports are welcome on GitHub.",
+  "description": "Scrolling too fast, or too slow? GNOME lets you set the pointer speed, but not the scroll speed. Scroll Speed adds the missing setting.\n\n• Mouse wheel: from 0.1× to 5×, with a separate horizontal speed and optional acceleration when the wheel spins fast.\n• Touchpad: two-finger scrolling slower or faster. Pinch, taps, swipes and click-and-drag stay exactly as they are.\n• Pointing stick (TrackPoint): middle-button scrolling slower or faster.\n\nIt works in every application, on Wayland and X11, and changes apply while you move the slider. A device left at 1× is not touched at all.\n\nHow it works: GNOME hands scroll events to applications before an extension can change them, so a small bundled Python helper (standard library only) reads the device and replays it through a virtual one, with only the scrolling rescaled. This needs one authorization, asked from the preferences with your password: a udev rule that gives your session access to mice, touchpads and pointing sticks, and to /dev/uinput (which lets programs of your session create virtual input devices). The helper never captures physical keyboards. The helper itself runs as you, without any privilege. The rule stays installed until you click \"Remove…\" in the preferences, even after the extension is uninstalled.\n\nRequires Python 3. Touchpad edge scrolling is not affected. This is an early release: reports are welcome on GitHub.",
   "shell-version": [
     "51"
   ],
   "settings-schema": "org.gnome.shell.extensions.scroll-speed",
   "gettext-domain": "scroll-speed",
-  "version-name": "0.2",
+  "version-name": "0.3",
   "url": "https://github.com/d101c/scroll-speed"
 }
