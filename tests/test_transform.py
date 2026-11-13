@@ -199,5 +199,50 @@ class HelpersTest(unittest.TestCase):
         self.assertEqual(h.UI_SET_PROPBIT, 0x4004556E)
 
 
+class InstanceLock(unittest.TestCase):
+    def test_no_runtime_dir_means_no_lock_and_no_tmp_fallback(self):
+        saved = os.environ.pop('XDG_RUNTIME_DIR', None)
+        try:
+            with self.assertRaises(OSError):
+                h.take_instance_lock()
+            self.assertEqual(h.main([]), 4)
+        finally:
+            if saved is not None:
+                os.environ['XDG_RUNTIME_DIR'] = saved
+
+    def test_symlink_at_the_lock_path_is_refused(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as directory:
+            target = os.path.join(directory, 'target')
+            os.symlink(target, os.path.join(directory, 'scroll-speed-%d.lock' % os.getuid()))
+            saved = os.environ.get('XDG_RUNTIME_DIR')
+            os.environ['XDG_RUNTIME_DIR'] = directory
+            try:
+                with self.assertRaises(OSError):
+                    h.take_instance_lock()
+            finally:
+                if saved is None:
+                    del os.environ['XDG_RUNTIME_DIR']
+                else:
+                    os.environ['XDG_RUNTIME_DIR'] = saved
+            self.assertFalse(os.path.exists(target))
+
+    def test_second_lock_is_refused(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as directory:
+            saved = os.environ.get('XDG_RUNTIME_DIR')
+            os.environ['XDG_RUNTIME_DIR'] = directory
+            try:
+                first = h.take_instance_lock()
+                self.assertIsNotNone(first)
+                self.assertIsNone(h.take_instance_lock())
+                os.close(first)
+            finally:
+                if saved is None:
+                    del os.environ['XDG_RUNTIME_DIR']
+                else:
+                    os.environ['XDG_RUNTIME_DIR'] = saved
+
+
 if __name__ == '__main__':
     unittest.main()

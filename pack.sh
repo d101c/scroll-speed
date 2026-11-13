@@ -27,6 +27,8 @@ gnome-extensions pack "$SRC" \
 
 # `gnome-extensions pack` flattens extra sources to their basename, so the
 # helper/ directory is added to the zip afterwards with its path preserved.
-( cd "$SRC" && zip -q "$ZIP" helper/scroll_speed_helper.py )
+# The licence is copied next to the code so the zip is self-contained.
+cp "$REPO/LICENSE" "$SRC/LICENSE"
+( cd "$SRC" && zip -q "$ZIP" helper/scroll_speed_helper.py LICENSE )
 
 echo "Built: $ZIP"

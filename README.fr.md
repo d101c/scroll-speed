@@ -11,7 +11,7 @@ les applications, sous Wayland comme sous X11.
 
 ![Préférences](docs/preferences.png)
 
-État : 0.2, pour GNOME 51 (construit et testé sur Ubuntu 26.10). Toute la chaîne
+État : 0.3, pour GNOME 51 (construit et testé sur Ubuntu 26.10). Toute la chaîne
 est couverte par des tests automatiques sur de vrais périphériques noyau ; sur
 du vrai matériel, elle n'a servi pour l'instant que sur le pavé tactile d'un
 portable (voir [Ce qui est testé](#ce-qui-est-testé)). Les retours d'autres
@@ -92,14 +92,18 @@ L'assistant doit lire les périphériques et en créer des virtuels.
 - accès à `/dev/uinput`, aux souris, aux pavés tactiles et aux TrackPoint pour
   l'utilisateur connecté sur le poste (`uaccess`, le mécanisme qu'udev emploie
   pour les manettes et les cartes son) ;
-- claviers exclus : la règle n'expose jamais les frappes ;
+- les claviers physiques sont exclus des règles des nœuds d'événements :
+  l'assistant ne les capture jamais (mais `/dev/uinput` lui-même est ouvert,
+  voir ci-dessous) ;
 - les clones retrouvent l'entrée de la base matérielle de la souris qu'ils
   reproduisent (DPI, marqueur trackball), donc le pointeur bouge exactement
   comme avant.
 
 L'accès à `/dev/uinput` permet aux programmes de votre session de créer des
-périphériques d'entrée ; les règles udev de Steam font de même. **Retirer…**
-dans les préférences supprime la règle. Une règle installée par la version 0.1
+périphériques d'entrée ; les règles udev de Steam font de même. L'assistant tourne
+en utilisateur, sans privilège. **Retirer…** dans les préférences supprime la
+règle ; elle reste installée jusque-là, même après désinstallation de
+l'extension. Une règle installée par la version 0.1
 ne couvre que les souris : les préférences demandent alors d'autoriser une
 fois de plus.
 
